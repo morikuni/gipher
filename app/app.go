@@ -239,8 +239,8 @@ func createIO(stdin io.Reader, stdout io.Writer, inputFile, outputFile string) (
 	return input, output, nil
 }
 
-func createCryptor(typ, awsRegion, keyID string) (gipher.Cryptor, error) {
-	switch typ {
+func createCryptor(cryptor, awsRegion, keyID string) (gipher.Cryptor, error) {
+	switch cryptor {
 	case "":
 		return nil, errors.New("cryptor is required")
 	case "password":
@@ -258,7 +258,7 @@ func createCryptor(typ, awsRegion, keyID string) (gipher.Cryptor, error) {
 		}
 		return gipher.NewAWSKMSCryptor(awsRegion, keyID)
 	default:
-		return nil, fmt.Errorf("unknown cryptor: %q", typ)
+		return nil, fmt.Errorf("unknown cryptor: %q", cryptor)
 	}
 }
 
