@@ -5,7 +5,6 @@ import (
 	"crypto/cipher"
 	"crypto/rand"
 	"crypto/sha256"
-	"encoding/base64"
 	"fmt"
 	"io"
 )
@@ -38,13 +37,13 @@ func (c passwordCryptor) Encrypt(text string) (Base64String, error) {
 
 	stream.XORKeyStream(ciphertext[aes.BlockSize:], plaintext)
 
-	return Base64String(base64.StdEncoding.EncodeToString(ciphertext)), nil
+	return EncodeBase64(ciphertext), nil
 }
 
 func (c passwordCryptor) Decrypt(text Base64String) (string, error) {
-	ciphertext, err := base64.StdEncoding.DecodeString(string(text))
+	ciphertext, err := DecodeBase64(text)
 	if err != nil {
-		return "", fmt.Errorf("failed to decode ciphertext as base64: %s", err)
+		return "", err
 	}
 	plaintext := make([]byte, len(ciphertext)-aes.BlockSize)
 
