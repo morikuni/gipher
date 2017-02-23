@@ -32,7 +32,7 @@ func (a app) Run(args []string, stdin io.Reader, stdout io.Writer, stderr io.Wri
 	help := flag.BoolP("help", "h", false, "print this message.")
 	inputFile := flag.StringP("file", "f", "", "file path to input.")
 	outputFile := flag.StringP("output", "o", "", "file path to output.")
-	typ := flag.StringP("type", "t", "text", `"text", "json", "yaml", or "toml"`)
+	format := flag.String("format", "text", `"text", "json", "yaml", or "toml"`)
 	field := flag.String("field", "", `field to be encrypted/decrypted (e.g. "user/items"). all fields are encrypted/decrypted by default.`)
 	cryptorType := flag.String("cryptor", "password", `"password" or "aws-kms".`)
 	keyID := flag.String("key-id", "", "key id for aws kms.")
@@ -80,7 +80,7 @@ func (a app) Run(args []string, stdin io.Reader, stdout io.Writer, stderr io.Wri
 	defer input.Close()
 	defer output.Close()
 
-	acc, err := decodeToAccessor(*typ, input)
+	acc, err := decodeToAccessor(*format, input)
 	if err != nil {
 		fmt.Fprintln(stderr, err)
 		return 1
@@ -126,7 +126,7 @@ func (a app) Run(args []string, stdin io.Reader, stdout io.Writer, stderr io.Wri
 		return 1
 	}
 
-	err = encodeAccessor(*typ, output, acc)
+	err = encodeAccessor(*format, output, acc)
 	if err != nil {
 		fmt.Fprintln(stderr, err)
 		return 1
@@ -135,8 +135,8 @@ func (a app) Run(args []string, stdin io.Reader, stdout io.Writer, stderr io.Wri
 	return 0
 }
 
-func decodeToAccessor(typ string, input io.Reader) (accessor.Accessor, error) {
-	switch typ {
+func decodeToAccessor(format string, input io.Reader) (accessor.Accessor, error) {
+	switch format {
 	case "":
 		return nil, errors.New("type is required")
 	case "json":
@@ -171,12 +171,12 @@ func decodeToAccessor(typ string, input io.Reader) (accessor.Accessor, error) {
 		}
 		return accessor.NewAccessor(string(bs))
 	default:
-		return nil, fmt.Errorf("unknown type: %q", typ)
+		return nil, fmt.Errorf("unknown type: %q", format)
 	}
 }
 
-func encodeAccessor(typ string, output io.Writer, acc accessor.Accessor) error {
-	switch typ {
+func encodeAccessor(format string, output io.Writer, acc accessor.Accessor) error {
+	switch format {
 	case "":
 		return errors.New("type is required")
 	case "json":
@@ -194,7 +194,7 @@ func encodeAccessor(typ string, output io.Writer, acc accessor.Accessor) error {
 		_, err := output.Write([]byte(acc.Unwrap().(string)))
 		return err
 	default:
-		return fmt.Errorf("unknown type: %q", typ)
+		return fmt.Errorf("unknown type: %q", format)
 	}
 }
 
