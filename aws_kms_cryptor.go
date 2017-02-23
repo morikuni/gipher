@@ -12,7 +12,12 @@ type awsKMSCryptor struct {
 }
 
 func NewAWSKMSCryptor(region string, keyID string) (Cryptor, error) {
-	session, err := session.NewSession(&aws.Config{Region: aws.String(region)})
+	session, err := session.NewSessionWithOptions(session.Options{
+		Config: aws.Config{
+			Region: aws.String(region),
+		},
+		SharedConfigState: session.SharedConfigEnable,
+	})
 	if err != nil {
 		return nil, err
 	}
