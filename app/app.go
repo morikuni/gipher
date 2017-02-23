@@ -35,24 +35,24 @@ func (a app) Run(args []string, stdin io.Reader, stdout io.Writer, stderr io.Wri
 	format := flag.String("format", "text", `"text", "json", "yaml", or "toml"`)
 	field := flag.String("field", "", `field to be encrypted/decrypted (e.g. "user/items"). all fields are encrypted/decrypted by default.`)
 	cryptorType := flag.String("cryptor", "password", `"password" or "aws-kms".`)
-	keyID := flag.String("key-id", "", "key id for aws kms.")
-	awsRegion := flag.String("aws-region", "", "aws region")
+	awsKeyID := flag.String("aws-key-id", "", "key id for aws kms. (required when cryptor is aws-kms)")
+	awsRegion := flag.String("aws-region", "", "aws region. (required when cryptor is aws-kms)")
 	flag.Usage = func() {
 		fmt.Fprintln(stderr)
 		fmt.Fprintln(stderr, "Usage: gipher <command> [flags]")
 		fmt.Fprintln(stderr)
 		fmt.Fprintln(stderr, "Commands:")
-		fmt.Fprintln(stderr, "      encrypt")
-		fmt.Fprintln(stderr, "      decrypt")
+		fmt.Fprintln(stderr, "      encrypt               encrypt a file.")
+		fmt.Fprintln(stderr, "      decrypt               decrypt a encrypted file.")
 		fmt.Fprintln(stderr)
 		fmt.Fprintln(stderr, "Flags:")
 		fmt.Fprintln(stderr, flag.FlagUsages())
 		fmt.Fprintln(stderr)
 		fmt.Fprintln(stderr, "Environment variables:")
-		fmt.Fprintln(stderr, "      GIPHER_PASSWORD        set password without prompt.")
-		fmt.Fprintln(stderr, "      AWS_PROFILE            set profile for aws.")
-		fmt.Fprintln(stderr, "      AWS_ACCESS_KEY_ID      set access key id for aws.")
-		fmt.Fprintln(stderr, "      AWS_SECRET_ACCESS_KEY  set secret access key for aws.")
+		fmt.Fprintln(stderr, "      GIPHER_PASSWORD       set password without prompt.")
+		fmt.Fprintln(stderr, "      AWS_PROFILE           set profile for aws.")
+		fmt.Fprintln(stderr, "      AWS_ACCESS_KEY_ID     set access key id for aws.")
+		fmt.Fprintln(stderr, "      AWS_SECRET_ACCESS_KEY set secret access key for aws.")
 	}
 
 	err := flag.Parse(args)
@@ -69,6 +69,7 @@ func (a app) Run(args []string, stdin io.Reader, stdout io.Writer, stderr io.Wri
 	command := flag.Arg(1)
 	if command == "" {
 		fmt.Fprintln(stderr, "command is required")
+		flag.Usage()
 		return 1
 	}
 
@@ -92,7 +93,7 @@ func (a app) Run(args []string, stdin io.Reader, stdout io.Writer, stderr io.Wri
 		return 1
 	}
 
-	cryptor, err := createCryptor(*cryptorType, *awsRegion, *keyID)
+	cryptor, err := createCryptor(*cryptorType, *awsRegion, *awsKeyID)
 	if err != nil {
 		fmt.Fprintln(stderr, err)
 		return 1
@@ -242,7 +243,7 @@ func createIO(stdin io.Reader, stdout io.Writer, inputFile, outputFile string) (
 	return input, output, nil
 }
 
-func createCryptor(cryptor, awsRegion, keyID string) (gipher.Cryptor, error) {
+func createCryptor(cryptor, awsRegion, awsKeyID string) (gipher.Cryptor, error) {
 	switch cryptor {
 	case "":
 		return nil, errors.New("cryptor is required")
@@ -256,10 +257,10 @@ func createCryptor(cryptor, awsRegion, keyID string) (gipher.Cryptor, error) {
 		if awsRegion == "" {
 			return nil, errors.New("aws-region is required for aws-kms")
 		}
-		if keyID == "" {
+		if awsKeyID == "" {
 			return nil, errors.New("key-id is required for aws-kms")
 		}
-		return gipher.NewAWSKMSCryptor(awsRegion, keyID)
+		return gipher.NewAWSKMSCryptor(awsRegion, awsKeyID)
 	default:
 		return nil, fmt.Errorf("unknown cryptor: %q", cryptor)
 	}
