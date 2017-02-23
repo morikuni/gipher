@@ -49,7 +49,10 @@ func (a app) Run(args []string, stdin io.Reader, stdout io.Writer, stderr io.Wri
 		fmt.Fprintln(stderr, flag.FlagUsages())
 		fmt.Fprintln(stderr)
 		fmt.Fprintln(stderr, "Environment variables:")
-		fmt.Fprintln(stderr, "      GIPHER_PASSWORD    set password without prompt.")
+		fmt.Fprintln(stderr, "      GIPHER_PASSWORD        set password without prompt.")
+		fmt.Fprintln(stderr, "      AWS_PROFILE            set profile for aws.")
+		fmt.Fprintln(stderr, "      AWS_ACCESS_KEY_ID      set access key id for aws.")
+		fmt.Fprintln(stderr, "      AWS_SECRET_ACCESS_KEY  set secret access key for aws.")
 	}
 
 	err := flag.Parse(args)
