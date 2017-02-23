@@ -21,7 +21,7 @@ func NewPasswordCryptor(password []byte) Cryptor {
 	}
 }
 
-func (e passwordCryptor) Encrypt(text string) (Base64String, error) {
+func (c passwordCryptor) Encrypt(text string) (Base64String, error) {
 	plaintext := []byte(text)
 	ciphertext := make([]byte, aes.BlockSize+len(plaintext))
 
@@ -30,7 +30,7 @@ func (e passwordCryptor) Encrypt(text string) (Base64String, error) {
 		return "", err
 	}
 
-	block, err := aes.NewCipher(e.passwordHash)
+	block, err := aes.NewCipher(c.passwordHash)
 	if err != nil {
 		return "", fmt.Errorf("cannot accept the encryption key: %s", err)
 	}
@@ -41,7 +41,7 @@ func (e passwordCryptor) Encrypt(text string) (Base64String, error) {
 	return Base64String(base64.StdEncoding.EncodeToString(ciphertext)), nil
 }
 
-func (e passwordCryptor) Decrypt(text Base64String) (string, error) {
+func (c passwordCryptor) Decrypt(text Base64String) (string, error) {
 	ciphertext, err := base64.StdEncoding.DecodeString(string(text))
 	if err != nil {
 		return "", fmt.Errorf("failed to decode ciphertext as base64: %s", err)
@@ -50,7 +50,7 @@ func (e passwordCryptor) Decrypt(text Base64String) (string, error) {
 
 	iv := ciphertext[:aes.BlockSize]
 
-	block, err := aes.NewCipher(e.passwordHash)
+	block, err := aes.NewCipher(c.passwordHash)
 	if err != nil {
 		return "", fmt.Errorf("cannot accept the decryption key: %s", err)
 	}
