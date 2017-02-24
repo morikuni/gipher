@@ -203,7 +203,7 @@ func extractTargetByField(acc accessor.Accessor, field string) (accessor.Accesso
 	}
 	path, err := accessor.ParsePath(field)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("field is invalid: %s", err)
 	}
 	return acc.Get(path)
 }
