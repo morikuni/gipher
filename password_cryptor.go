@@ -7,6 +7,9 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"io"
+	"os"
+
+	"golang.org/x/crypto/ssh/terminal"
 )
 
 type passwordCryptor struct {
@@ -18,6 +21,21 @@ func NewPasswordCryptor(password []byte) Cryptor {
 	return passwordCryptor{
 		hash[:],
 	}
+}
+
+func NewPasswordCryptorWithPrompt() (Cryptor, error) {
+	pass := os.Getenv("GIPHER_PASSWORD")
+	if pass != "" {
+		return NewPasswordCryptor([]byte(pass)), nil
+	}
+
+	fmt.Fprint(os.Stderr, "password:")
+	p, err := terminal.ReadPassword(int(os.Stdin.Fd()))
+	fmt.Fprintln(os.Stderr)
+	if err != nil {
+		return nil, err
+	}
+	return NewPasswordCryptor(p), nil
 }
 
 func (c passwordCryptor) Encrypt(text string) (Base64String, error) {

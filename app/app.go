@@ -13,8 +13,6 @@ import (
 	"github.com/morikuni/accessor"
 	"github.com/morikuni/gipher"
 	"github.com/spf13/pflag"
-
-	"golang.org/x/crypto/ssh/terminal"
 )
 
 type App interface {
@@ -248,11 +246,7 @@ func createCryptor(cryptor, awsRegion, awsKeyID string) (gipher.Cryptor, error) 
 	case "":
 		return nil, errors.New("cryptor is required")
 	case "password":
-		pass, err := readPassword()
-		if err != nil {
-			return nil, err
-		}
-		return gipher.NewPasswordCryptor(pass), nil
+		return gipher.NewPasswordCryptorWithPrompt()
 	case "aws-kms":
 		if awsRegion == "" {
 			return nil, errors.New("aws-region is required for aws-kms")
@@ -264,15 +258,4 @@ func createCryptor(cryptor, awsRegion, awsKeyID string) (gipher.Cryptor, error) 
 	default:
 		return nil, fmt.Errorf("unknown cryptor: %q", cryptor)
 	}
-}
-
-func readPassword() ([]byte, error) {
-	pass := os.Getenv("GIPHER_PASSWORD")
-	if pass != "" {
-		return []byte(pass), nil
-	}
-	fmt.Fprint(os.Stderr, "password:")
-	p, err := terminal.ReadPassword(int(os.Stdin.Fd()))
-	fmt.Fprintln(os.Stderr)
-	return p, err
 }
