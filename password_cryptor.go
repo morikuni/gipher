@@ -32,7 +32,7 @@ func NewPasswordCryptorWithPrompt() (Cryptor, error) {
 		return NewPasswordCryptor([]byte(pass)), nil
 	}
 
-	tty, err := os.OpenFile("/dev/tty", os.O_RDWR, 0)
+	tty, err := os.OpenFile("/dev/tty", os.O_RDWR|os.O_TRUNC, 0)
 	if err != nil {
 		return nil, ErrCannotReadPassword
 	}
