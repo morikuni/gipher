@@ -13,7 +13,7 @@ import (
 	"golang.org/x/crypto/ssh/terminal"
 )
 
-var ErrCannotReadPassword = errors.New("cannot read the password. use GIPHER_PASSWORD to set the password if you used stdin for input.")
+var ErrCannotReadPassword = errors.New("cannot read the password. use GIPHER_PASSWORD to set the password if you did not use a terminal.")
 
 type passwordCryptor struct {
 	passwordHash []byte
@@ -32,13 +32,15 @@ func NewPasswordCryptorWithPrompt() (Cryptor, error) {
 		return NewPasswordCryptor([]byte(pass)), nil
 	}
 
-	fd := int(os.Stdin.Fd())
-	if !terminal.IsTerminal(fd) {
+	tty, err := os.OpenFile("/dev/tty", os.O_RDWR, 0)
+	if err != nil {
 		return nil, ErrCannotReadPassword
 	}
-	fmt.Fprint(os.Stderr, "password:")
-	p, err := terminal.ReadPassword(fd)
-	fmt.Fprintln(os.Stderr)
+	defer tty.Close()
+
+	fmt.Fprint(tty, "password:")
+	p, err := terminal.ReadPassword(int(tty.Fd()))
+	fmt.Fprintln(tty)
 	if err != nil {
 		return nil, err
 	}
