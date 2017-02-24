@@ -35,6 +35,7 @@ func (a app) Run(args []string, stdin io.Reader, stdout io.Writer, stderr io.Wri
 	cryptorType := flag.String("cryptor", "password", `"password" or "aws-kms".`)
 	awsKeyID := flag.String("aws-key-id", "", "key id for aws kms. (required when cryptor is aws-kms)")
 	awsRegion := flag.String("aws-region", "", "aws region. (required when cryptor is aws-kms)")
+	dryrun := flag.Bool("dryrun", false, `display fields to be affected as "THIS FIELD WILL BE CHENGED", without operation.`)
 	flag.Usage = func() {
 		fmt.Fprintln(stderr)
 		fmt.Fprintln(stderr, "Usage: gipher <command> [flags]")
@@ -98,25 +99,12 @@ func (a app) Run(args []string, stdin io.Reader, stdout io.Writer, stderr io.Wri
 	}
 
 	err = target.Foreach(func(path accessor.Path, value interface{}) error {
-		switch command {
-		case "encrypt":
-			if s, ok := value.(string); ok {
-				base64, err := cryptor.Encrypt(s)
-				if err != nil {
-					return err
-				}
-				return target.Set(path, string(base64))
+		if s, ok := value.(string); ok {
+			result, err := handleString(command, cryptor, s, *dryrun)
+			if err != nil {
+				return err
 			}
-		case "decrypt":
-			if s, ok := value.(string); ok {
-				text, err := cryptor.Decrypt(gipher.Base64String(s))
-				if err != nil {
-					return err
-				}
-				return target.Set(path, text)
-			}
-		default:
-			return fmt.Errorf("unknown command: %s", command)
+			return target.Set(path, result)
 		}
 		return nil
 	})
@@ -257,5 +245,28 @@ func createCryptor(cryptor, awsRegion, awsKeyID string) (gipher.Cryptor, error) 
 		return gipher.NewAWSKMSCryptor(awsRegion, awsKeyID)
 	default:
 		return nil, fmt.Errorf("unknown cryptor: %q", cryptor)
+	}
+}
+
+func handleString(command string, cryptor gipher.Cryptor, s string, dryrun bool) (interface{}, error) {
+	if dryrun {
+		return "THIS FIELD WILL BE CHANGED", nil
+	}
+
+	switch command {
+	case "encrypt":
+		base64, err := cryptor.Encrypt(s)
+		if err != nil {
+			return "", err
+		}
+		return string(base64), nil
+	case "decrypt":
+		text, err := cryptor.Decrypt(gipher.Base64String(s))
+		if err != nil {
+			return "", err
+		}
+		return text, nil
+	default:
+		return nil, fmt.Errorf("unknown command: %s", command)
 	}
 }
