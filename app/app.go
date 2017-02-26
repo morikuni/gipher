@@ -7,6 +7,8 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"strconv"
+	"strings"
 
 	"github.com/BurntSushi/toml"
 	"github.com/go-yaml/yaml"
@@ -99,12 +101,29 @@ func (a app) Run(args []string, stdin io.Reader, stdout io.Writer, stderr io.Wri
 	}
 
 	err = target.Foreach(func(path accessor.Path, value interface{}) error {
-		if s, ok := value.(string); ok {
-			result, err := handleString(command, cryptor, s, *dryrun)
+		if *dryrun {
+			return target.Set(path, "THIS FIELD WILL BE CHENGED")
+		}
+
+		switch command {
+		case "encrypt":
+			cipher, shouldSet, err := encrypt(cryptor, value)
 			if err != nil {
 				return err
 			}
-			return target.Set(path, result)
+			if shouldSet {
+				return target.Set(path, cipher)
+			}
+		case "decrypt":
+			if s, ok := value.(string); ok {
+				value, err := decrypt(cryptor, s)
+				if err != nil {
+					return err
+				}
+				return target.Set(path, value)
+			}
+		default:
+			return fmt.Errorf("unknown command: %s", command)
 		}
 		return nil
 	})
@@ -248,25 +267,59 @@ func createCryptor(cryptor, awsRegion, awsKeyID string) (gipher.Cryptor, error) 
 	}
 }
 
-func handleString(command string, cryptor gipher.Cryptor, s string, dryrun bool) (interface{}, error) {
-	if dryrun {
-		return "THIS FIELD WILL BE CHANGED", nil
+func decrypt(cryptor gipher.Cryptor, value string) (interface{}, error) {
+	text, err := cryptor.Decrypt(gipher.Base64String(value))
+	if err != nil {
+		return "", err
 	}
+	return decodeFromString(text)
+}
 
-	switch command {
-	case "encrypt":
-		base64, err := cryptor.Encrypt(s)
-		if err != nil {
-			return "", err
-		}
-		return string(base64), nil
-	case "decrypt":
-		text, err := cryptor.Decrypt(gipher.Base64String(s))
-		if err != nil {
-			return "", err
-		}
-		return text, nil
+func encrypt(cryptor gipher.Cryptor, value interface{}) (string, bool, error) {
+	text, shouldSet, err := encodeToString(value)
+	if !shouldSet || err != nil {
+		return "", shouldSet, err
+	}
+	cipher, err := cryptor.Encrypt(text)
+	return string(cipher), true, err
+}
+
+func encodeToString(value interface{}) (string, bool, error) {
+	switch t := value.(type) {
+	case string:
+		return String + ":" + t, true, nil
+	case int:
+		return Int + ":" + strconv.FormatInt(int64(t), 10), true, nil
+	case int64:
+		return Int + ":" + strconv.FormatInt(t, 10), true, nil
+	case float32:
+		return Float + ":" + strconv.FormatFloat(float64(t), 'E', -1, 64), true, nil
+	case float64:
+		return Float + ":" + strconv.FormatFloat(t, 'E', -1, 64), true, nil
 	default:
-		return nil, fmt.Errorf("unknown command: %s", command)
+		return "", false, nil
 	}
 }
+
+func decodeFromString(text string) (interface{}, error) {
+	s := strings.SplitN(text, ":", 2)
+	if len(s) != 2 {
+		return nil, fmt.Errorf("unknown format: %s", text)
+	}
+	switch s[0] {
+	case String:
+		return s[1], nil
+	case Int:
+		return strconv.ParseInt(s[1], 10, 64)
+	case Float:
+		return strconv.ParseFloat(s[1], 64)
+	default:
+		return nil, fmt.Errorf("unknown format: %s", text)
+	}
+}
+
+var (
+	String = "string"
+	Int    = "int"
+	Float  = "float"
+)
