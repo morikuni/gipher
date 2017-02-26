@@ -94,7 +94,7 @@ func (a app) Run(args []string, stdin io.Reader, stdout io.Writer, stderr io.Wri
 		return 1
 	}
 
-	cryptor, err := createCryptor(*cryptorType, *awsRegion, *awsKeyID)
+	cryptor, err := createCryptor(*cryptorType, command, *awsRegion, *awsKeyID)
 	if err != nil {
 		fmt.Fprintln(stderr, err)
 		return 1
@@ -248,7 +248,7 @@ func createIO(stdin io.Reader, stdout io.Writer, inputFile, outputFile string) (
 	return input, output, nil
 }
 
-func createCryptor(cryptor, awsRegion, awsKeyID string) (gipher.Cryptor, error) {
+func createCryptor(cryptor, command, awsRegion, awsKeyID string) (gipher.Cryptor, error) {
 	switch cryptor {
 	case "":
 		return nil, errors.New("cryptor is required")
@@ -258,7 +258,7 @@ func createCryptor(cryptor, awsRegion, awsKeyID string) (gipher.Cryptor, error) 
 		if awsRegion == "" {
 			return nil, errors.New("aws-region is required for aws-kms")
 		}
-		if awsKeyID == "" {
+		if awsKeyID == "" && command == "encrypt" {
 			return nil, errors.New("key-id is required for aws-kms")
 		}
 		return gipher.NewAWSKMSCryptor(awsRegion, awsKeyID)
