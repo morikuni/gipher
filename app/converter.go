@@ -12,20 +12,20 @@ var (
 	Float  = "float"
 )
 
-func encodeToString(value interface{}) (string, bool, error) {
+func encodeToString(value interface{}) (string, bool) {
 	switch t := value.(type) {
 	case string:
-		return String + ":" + t, true, nil
+		return String + ":" + t, true
 	case int:
-		return Int + ":" + strconv.FormatInt(int64(t), 10), true, nil
+		return Int + ":" + strconv.FormatInt(int64(t), 10), true
 	case int64:
-		return Int + ":" + strconv.FormatInt(t, 10), true, nil
+		return Int + ":" + strconv.FormatInt(t, 10), true
 	case float32:
-		return Float + ":" + strconv.FormatFloat(float64(t), 'E', -1, 64), true, nil
+		return Float + ":" + strconv.FormatFloat(float64(t), 'E', -1, 64), true
 	case float64:
-		return Float + ":" + strconv.FormatFloat(t, 'E', -1, 64), true, nil
+		return Float + ":" + strconv.FormatFloat(t, 'E', -1, 64), true
 	default:
-		return "", false, nil
+		return "", false
 	}
 }
 

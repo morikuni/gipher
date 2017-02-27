@@ -35,9 +35,9 @@ func decrypt(cryptor gipher.Cryptor, value string) (interface{}, error) {
 }
 
 func encrypt(cryptor gipher.Cryptor, value interface{}) (string, bool, error) {
-	text, shouldSet, err := encodeToString(value)
-	if !shouldSet || err != nil {
-		return "", shouldSet, err
+	text, shouldSet := encodeToString(value)
+	if !shouldSet {
+		return "", shouldSet, nil
 	}
 	cipher, err := cryptor.Encrypt(text)
 	return string(cipher), true, err
