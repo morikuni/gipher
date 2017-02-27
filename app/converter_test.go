@@ -64,6 +64,14 @@ func TestEncodeToString(t *testing.T) {
 			},
 		},
 		{
+			Title: "nil",
+			Input: Input{nil},
+			Expect: Expect{
+				String:    "nil:",
+				ShouldSet: true,
+			},
+		},
+		{
 			Title: "other",
 			Input: Input{1 + 2i},
 			Expect: Expect{
@@ -137,6 +145,14 @@ func TestDecodeFromString(t *testing.T) {
 			Input: Input{"float:1.23123123123E+11"},
 			Expect: Expect{
 				Value: float64(123123123123),
+				Err:   nil,
+			},
+		},
+		{
+			Title: "nil",
+			Input: Input{"nil:"},
+			Expect: Expect{
+				Value: nil,
 				Err:   nil,
 			},
 		},

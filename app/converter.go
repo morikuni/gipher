@@ -10,9 +10,14 @@ var (
 	String = "string"
 	Int    = "int"
 	Float  = "float"
+	Nil    = "nil"
 )
 
 func encodeToString(value interface{}) (string, bool) {
+	if value == nil {
+		return Nil + ":", true
+	}
+
 	switch t := value.(type) {
 	case string:
 		return String + ":" + t, true
@@ -41,6 +46,8 @@ func decodeFromString(text string) (interface{}, error) {
 		return strconv.ParseInt(s[1], 10, 64)
 	case Float:
 		return strconv.ParseFloat(s[1], 64)
+	case Nil:
+		return nil, nil
 	default:
 		return nil, fmt.Errorf("unknown format: %s", text)
 	}
