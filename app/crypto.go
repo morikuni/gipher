@@ -27,7 +27,7 @@ func createCryptor(cryptor, command, awsRegion, awsKeyID string) (gipher.Cryptor
 }
 
 func decrypt(cryptor gipher.Cryptor, value string) (interface{}, error) {
-	text, err := cryptor.Decrypt(gipher.Base64String(value))
+	text, err := cryptor.Decrypt(gipher.Ciphertext(value))
 	if err != nil {
 		return "", err
 	}

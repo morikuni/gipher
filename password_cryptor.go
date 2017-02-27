@@ -53,28 +53,28 @@ func NewPasswordCryptorWithPrompt() (Cryptor, error) {
 	return NewPasswordCryptor(p), nil
 }
 
-func (c passwordCryptor) Encrypt(text string) (Base64String, error) {
+func (c passwordCryptor) Encrypt(text string) (Ciphertext, error) {
 	plaintext := []byte(text)
 	ciphertext := make([]byte, aes.BlockSize+len(plaintext))
 
 	iv := ciphertext[:aes.BlockSize]
 	if _, err := io.ReadFull(rand.Reader, iv); err != nil {
-		return "", err
+		return nil, err
 	}
 
 	block, err := aes.NewCipher(c.passwordHash)
 	if err != nil {
-		return "", fmt.Errorf("cannot accept the encryption key: %s", err)
+		return nil, fmt.Errorf("cannot accept the encryption key: %s", err)
 	}
 	stream := cipher.NewCTR(block, iv)
 
 	stream.XORKeyStream(ciphertext[aes.BlockSize:], plaintext)
 
-	return EncodeBase64(ciphertext), nil
+	return EncodeCiphertext(ciphertext), nil
 }
 
-func (c passwordCryptor) Decrypt(text Base64String) (string, error) {
-	ciphertext, err := DecodeBase64(text)
+func (c passwordCryptor) Decrypt(text Ciphertext) (string, error) {
+	ciphertext, err := DecodeCiphertext(text)
 	if err != nil {
 		return "", err
 	}

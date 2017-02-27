@@ -25,19 +25,19 @@ func NewAWSKMSCryptor(region string, keyID string) (Cryptor, error) {
 	return awsKMSCryptor{keyID, kms}, nil
 }
 
-func (c awsKMSCryptor) Encrypt(text string) (Base64String, error) {
+func (c awsKMSCryptor) Encrypt(text string) (Ciphertext, error) {
 	r, err := c.kms.Encrypt(&kms.EncryptInput{
 		KeyId:     aws.String(c.keyID),
 		Plaintext: []byte(text),
 	})
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	return EncodeBase64(r.CiphertextBlob), nil
+	return EncodeCiphertext(r.CiphertextBlob), nil
 }
 
-func (c awsKMSCryptor) Decrypt(text Base64String) (string, error) {
-	ciphertext, err := DecodeBase64(text)
+func (c awsKMSCryptor) Decrypt(text Ciphertext) (string, error) {
+	ciphertext, err := DecodeCiphertext(text)
 	if err != nil {
 		return "", err
 	}
