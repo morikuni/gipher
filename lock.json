@@ -11,8 +11,8 @@
         },
         {
             "name": "github.com/aws/aws-sdk-go",
-            "version": "v1.6.27",
-            "revision": "00fb2125993965df739fa3398b03bef3eb2e198f",
+            "version": "v1.7.1",
+            "revision": "1bd588c8b2dba4da57dd4664b2b2750d260a5915",
             "packages": [
                 "aws",
                 "aws/session",
@@ -54,7 +54,7 @@
         {
             "name": "github.com/morikuni/accessor",
             "branch": "master",
-            "revision": "d202fe9c378402a1f4fac3c42ebef2d98812fc02",
+            "revision": "02ea372dbcaac45e2ee8f835323ee25261ee698f",
             "packages": [
                 "."
             ]
@@ -94,7 +94,7 @@
         {
             "name": "golang.org/x/sys",
             "branch": "master",
-            "revision": "075e574b89e4c2d22f2286a7e2b919519c6f3547",
+            "revision": "e4594059fe4cde2daf423055a596c2cd1e6c9adf",
             "packages": [
                 "unix"
             ]
