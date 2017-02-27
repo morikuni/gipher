@@ -7,6 +7,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -33,7 +34,7 @@ func (a app) Run(args []string, stdin io.Reader, stdout io.Writer, stderr io.Wri
 	inputFile := flag.StringP("file", "f", "", "file path to input.")
 	outputFile := flag.StringP("output", "o", "", "file path to output.")
 	format := flag.String("format", "text", `"text", "json", "yaml", or "toml"`)
-	field := flag.String("field", "", `field to be encrypted/decrypted (e.g. "user/items"). all fields are encrypted/decrypted by default.`)
+	pattern := flag.String("pattern", ".*", `regular expression. only fields matching the pattern are encrypted/decrypted (e.g. "user/items/.*/name").`)
 	cryptorType := flag.String("cryptor", "password", `"password" or "aws-kms".`)
 	awsKeyID := flag.String("aws-key-id", "", "key id for aws kms. (required when cryptor is aws-kms)")
 	awsRegion := flag.String("aws-region", "", "aws region. (required when cryptor is aws-kms)")
@@ -74,6 +75,12 @@ func (a app) Run(args []string, stdin io.Reader, stdout io.Writer, stderr io.Wri
 		return 1
 	}
 
+	reg, err := regexp.Compile(*pattern)
+	if err != nil {
+		fmt.Fprintf(stderr, "invalid pattern: %s\n", err)
+		return 1
+	}
+
 	input, output, err := createIO(stdin, stdout, *inputFile, *outputFile)
 	if err != nil {
 		fmt.Fprintln(stderr, err)
@@ -88,21 +95,19 @@ func (a app) Run(args []string, stdin io.Reader, stdout io.Writer, stderr io.Wri
 		return 1
 	}
 
-	target, err := extractTargetByField(acc, *field)
-	if err != nil {
-		fmt.Fprintln(stderr, err)
-		return 1
-	}
-
 	cryptor, err := createCryptor(*cryptorType, command, *awsRegion, *awsKeyID)
 	if err != nil {
 		fmt.Fprintln(stderr, err)
 		return 1
 	}
 
-	err = target.Foreach(func(path accessor.Path, value interface{}) error {
+	err = acc.Foreach(func(path accessor.Path, value interface{}) error {
+		if !reg.MatchString(path.String()) {
+			return nil
+		}
+
 		if *dryrun {
-			return target.Set(path, "THIS FIELD WILL BE CHENGED")
+			return acc.Set(path, "THIS FIELD WILL BE CHENGED")
 		}
 
 		switch command {
@@ -112,7 +117,7 @@ func (a app) Run(args []string, stdin io.Reader, stdout io.Writer, stderr io.Wri
 				return err
 			}
 			if shouldSet {
-				return target.Set(path, cipher)
+				return acc.Set(path, cipher)
 			}
 		case "decrypt":
 			if s, ok := value.(string); ok {
@@ -120,7 +125,7 @@ func (a app) Run(args []string, stdin io.Reader, stdout io.Writer, stderr io.Wri
 				if err != nil {
 					return err
 				}
-				return target.Set(path, value)
+				return acc.Set(path, value)
 			}
 		default:
 			return fmt.Errorf("unknown command: %s", command)
@@ -202,17 +207,6 @@ func encodeAccessor(format string, output io.Writer, acc accessor.Accessor) erro
 	default:
 		return fmt.Errorf("unknown type: %q", format)
 	}
-}
-
-func extractTargetByField(acc accessor.Accessor, field string) (accessor.Accessor, error) {
-	if field == "" {
-		return acc, nil
-	}
-	path, err := accessor.ParsePath(field)
-	if err != nil {
-		return nil, fmt.Errorf("field is invalid: %s", err)
-	}
-	return acc.Get(path)
 }
 
 type nopCloser struct {
