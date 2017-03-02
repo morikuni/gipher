@@ -8,8 +8,8 @@ import (
 	"io/ioutil"
 
 	"github.com/BurntSushi/toml"
+	"github.com/go-yaml/yaml"
 	"github.com/morikuni/accessor"
-	yaml "gopkg.in/yaml.v2"
 )
 
 var (
