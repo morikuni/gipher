@@ -12,14 +12,26 @@ import (
 	yaml "gopkg.in/yaml.v2"
 )
 
+var (
+	ErrEmptyInput     = errors.New("input is empty")
+	ErrFormatRequired = errors.New("format is required")
+)
+
+func ErrUnknownFormat(format string) error {
+	return fmt.Errorf("unknown format: %q", format)
+}
+
 func decodeToAccessor(format string, input io.Reader) (accessor.Accessor, error) {
 	switch format {
 	case "":
-		return nil, errors.New("type is required")
+		return nil, ErrFormatRequired
 	case "json":
 		var obj interface{}
 		err := json.NewDecoder(input).Decode(&obj)
 		if err != nil {
+			if err == io.EOF {
+				return nil, ErrEmptyInput
+			}
 			return nil, err
 		}
 		return accessor.NewAccessor(obj)
@@ -28,6 +40,9 @@ func decodeToAccessor(format string, input io.Reader) (accessor.Accessor, error)
 		if err != nil {
 			return nil, err
 		}
+		if len(bs) == 0 {
+			return nil, ErrEmptyInput
+		}
 		var obj interface{}
 		err = yaml.Unmarshal(bs, &obj)
 		if err != nil {
@@ -35,8 +50,15 @@ func decodeToAccessor(format string, input io.Reader) (accessor.Accessor, error)
 		}
 		return accessor.NewAccessor(obj)
 	case "toml":
+		bs, err := ioutil.ReadAll(input)
+		if err != nil {
+			return nil, err
+		}
+		if len(bs) == 0 {
+			return nil, ErrEmptyInput
+		}
 		var obj interface{}
-		_, err := toml.DecodeReader(input, &obj)
+		_, err = toml.Decode(string(bs), &obj)
 		if err != nil {
 			return nil, err
 		}
@@ -46,16 +68,19 @@ func decodeToAccessor(format string, input io.Reader) (accessor.Accessor, error)
 		if err != nil {
 			return nil, err
 		}
+		if len(bs) == 0 {
+			return nil, ErrEmptyInput
+		}
 		return accessor.NewAccessor(string(bs))
 	default:
-		return nil, fmt.Errorf("unknown type: %q", format)
+		return nil, ErrUnknownFormat(format)
 	}
 }
 
 func encodeAccessor(format string, output io.Writer, acc accessor.Accessor) error {
 	switch format {
 	case "":
-		return errors.New("type is required")
+		return ErrFormatRequired
 	case "json":
 		return json.NewEncoder(output).Encode(acc.Unwrap())
 	case "yaml":
