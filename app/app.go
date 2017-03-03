@@ -59,6 +59,11 @@ func (a app) Run(args []string, stdin io.Reader, stdout io.Writer, stderr io.Wri
 		return 0
 	}
 
+	if len(flag.Args()) > 2 {
+		fmt.Fprintln(stderr, "too many args")
+		return 1
+	}
+
 	command := flag.Arg(1)
 	if command == "" {
 		fmt.Fprintln(stderr, "command is required")
