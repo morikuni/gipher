@@ -161,7 +161,7 @@ func TestDecodeFromString(t *testing.T) {
 			Input: Input{"2147483647"},
 			Expect: Expect{
 				Value: nil,
-				Err:   errors.New("unknown format: 2147483647"),
+				Err:   errors.New("invalid format: 2147483647"),
 			},
 		},
 		{
@@ -169,7 +169,7 @@ func TestDecodeFromString(t *testing.T) {
 			Input: Input{"tag:2147483647"},
 			Expect: Expect{
 				Value: nil,
-				Err:   errors.New("unknown format: tag:2147483647"),
+				Err:   errors.New("invalid format: tag:2147483647"),
 			},
 		},
 	}

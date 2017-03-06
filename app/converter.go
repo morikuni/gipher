@@ -37,7 +37,7 @@ func encodeToString(value interface{}) (string, bool) {
 func decodeFromString(text string) (interface{}, error) {
 	s := strings.SplitN(text, ":", 2)
 	if len(s) != 2 {
-		return nil, fmt.Errorf("unknown format: %s", text)
+		return nil, fmt.Errorf("invalid format: %s", text)
 	}
 	switch s[0] {
 	case String:
@@ -49,6 +49,6 @@ func decodeFromString(text string) (interface{}, error) {
 	case Nil:
 		return nil, nil
 	default:
-		return nil, fmt.Errorf("unknown format: %s", text)
+		return nil, fmt.Errorf("invalid format: %s", text)
 	}
 }
