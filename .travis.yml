@@ -4,13 +4,10 @@ go:
   - 1.8.x
 
 before_install:
-  - mkdir $GOPATH/bin
-  - wget https://github.com/Masterminds/glide/releases/download/v0.12.3/glide-v0.12.3-linux-amd64.zip
-  - unzip glide-v0.12.3-linux-amd64.zip
-  - install linux-amd64/glide $GOPATH/bin/glide
+  - go get -u github.com/golang/dep/...
 
 install:
-  - glide install
+  - dep ensure
 
 script: go test -v $(glide nv)
 
