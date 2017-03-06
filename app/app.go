@@ -9,6 +9,8 @@ import (
 	"github.com/spf13/pflag"
 )
 
+var DryrunMessage = "THIS FIELD WILL BE CHENGED"
+
 type App interface {
 	Run(args []string, stdin io.Reader, stdout io.Writer, stderr io.Writer) int
 }
@@ -103,7 +105,7 @@ func (a app) Run(args []string, stdin io.Reader, stdout io.Writer, stderr io.Wri
 		}
 
 		if *dryrun {
-			return acc.Set(path, "THIS FIELD WILL BE CHENGED")
+			return acc.Set(path, DryrunMessage)
 		}
 
 		switch command {
