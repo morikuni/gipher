@@ -1,0 +1,30 @@
+language: go
+
+go:
+  - 1.8.x
+
+before_install:
+  - mkdir $GOPATH/bin
+  - wget https://github.com/Masterminds/glide/releases/download/v0.12.3/glide-v0.12.3-linux-amd64.zip
+  - unzip glide-v0.12.3-linux-amd64.zip
+  - install linux-amd64/glide $GOPATH/bin/glide
+
+install:
+  - glide install
+
+script: go test -v $(glide nv)
+
+before_deploy:
+  - go get github.com/mitchellh/gox
+  - gox -output "release/{{.Dir}}-${TRAVIS_TAG}-{{.OS}}-{{.Arch}}/{{.Dir}}" -os "darwin linux windows" -arch "amd64 386" -ldflags "-X main.Version=${TRAVIS_TAG}" ./cmd/gipher/
+  - cd release
+  - for file in $(find ./*/* -type f); do zip $(basename $(dirname $file)).zip $file; done
+
+deploy:
+  provider: releases
+  api_key: $GITHUB_TOKEN
+  file_glob: true
+  file: "*.zip"
+  overwrite: true
+  on:
+    tags: true
