@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 )
 
 var (
@@ -11,6 +12,7 @@ var (
 	Int    = "int"
 	Float  = "float"
 	Bool   = "bool"
+	Time   = "time"
 	Nil    = "nil"
 )
 
@@ -32,6 +34,8 @@ func encodeToString(value interface{}) (string, bool) {
 		return Float + ":" + strconv.FormatFloat(t, 'E', -1, 64), true
 	case bool:
 		return Bool + ":" + strconv.FormatBool(t), true
+	case time.Time:
+		return Time + ":" + t.Format(time.RFC3339Nano), true
 	default:
 		return "", false
 	}
@@ -51,6 +55,8 @@ func decodeFromString(text string) (interface{}, error) {
 		return strconv.ParseFloat(s[1], 64)
 	case Bool:
 		return strconv.ParseBool(s[1])
+	case Time:
+		return time.Parse(time.RFC3339Nano, s[1])
 	case Nil:
 		return nil, nil
 	default:

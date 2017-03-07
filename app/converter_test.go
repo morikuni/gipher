@@ -4,6 +4,7 @@ import (
 	"errors"
 	"math"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -68,6 +69,14 @@ func TestEncodeToString(t *testing.T) {
 			Input: Input{true},
 			Expect: Expect{
 				String:    "bool:true",
+				ShouldSet: true,
+			},
+		},
+		{
+			Title: "time.Time",
+			Input: Input{time.Date(1992, 06, 18, 12, 34, 56, 78, time.UTC)},
+			Expect: Expect{
+				String:    "time:1992-06-18T12:34:56.000000078Z",
 				ShouldSet: true,
 			},
 		},
@@ -161,6 +170,14 @@ func TestDecodeFromString(t *testing.T) {
 			Input: Input{"bool:true"},
 			Expect: Expect{
 				Value: true,
+				Err:   nil,
+			},
+		},
+		{
+			Title: "time.Time",
+			Input: Input{"time:1992-06-18T12:34:56.000000078Z"},
+			Expect: Expect{
+				Value: time.Date(1992, 06, 18, 12, 34, 56, 78, time.UTC),
 				Err:   nil,
 			},
 		},
