@@ -10,6 +10,7 @@ var (
 	String = "string"
 	Int    = "int"
 	Float  = "float"
+	Bool   = "bool"
 	Nil    = "nil"
 )
 
@@ -29,6 +30,8 @@ func encodeToString(value interface{}) (string, bool) {
 		return Float + ":" + strconv.FormatFloat(float64(t), 'E', -1, 64), true
 	case float64:
 		return Float + ":" + strconv.FormatFloat(t, 'E', -1, 64), true
+	case bool:
+		return Bool + ":" + strconv.FormatBool(t), true
 	default:
 		return "", false
 	}
@@ -46,6 +49,8 @@ func decodeFromString(text string) (interface{}, error) {
 		return strconv.ParseInt(s[1], 10, 64)
 	case Float:
 		return strconv.ParseFloat(s[1], 64)
+	case Bool:
+		return strconv.ParseBool(s[1])
 	case Nil:
 		return nil, nil
 	default:
